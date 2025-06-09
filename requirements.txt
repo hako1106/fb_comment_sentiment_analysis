@@ -1,0 +1,9 @@
+emoji
+ipywidgets
+jupyter
+pandas
+playwright
+plotly
+streamlit
+torch
+transformers

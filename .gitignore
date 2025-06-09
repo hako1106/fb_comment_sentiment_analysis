@@ -1,0 +1,9 @@
+# Ignore dữ liệu và mô hình
+data/
+models/
+fb_user/
+
+# Ignore môi trường ảo
+__pycache__/
+*.py[cod]
+
