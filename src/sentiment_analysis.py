@@ -1,37 +1,47 @@
 import os
+from typing import List, Tuple
 
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    BatchEncoding,
+    PreTrainedTokenizerBase,
+)
 
 
 class CommentDataset(Dataset):
-    def __init__(self, texts):
+    """Custom Dataset for loading a list of text comments."""
+
+    def __init__(self, texts: list[str]):
         self.texts = texts
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """Return number of samples in the dataset."""
+
         return len(self.texts)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> str:
+        """Return the text sample at the given index."""
+
         return self.texts[idx]
 
 
-def collate_batch(batch_texts, tokenizer):
-    """
-    Mã hóa và chuẩn hóa batch văn bản để đưa vào mô hình.
+def collate_batch(
+    batch_texts: List[str], tokenizer: PreTrainedTokenizerBase
+) -> BatchEncoding:
+    """Tokenize and pad a batch of texts for model input."""
 
-    Áp dụng padding, truncation và chuyển sang tensor PyTorch.
-    """
     return tokenizer(batch_texts, return_tensors="pt", truncation=True, padding=True)
 
 
-def load_model(model_path="models/bert_sentiment_vietnamese"):
-    """
-    Tải mô hình và tokenizer từ HuggingFace, chuyển sang GPU nếu có.
+def load_model(
+    model_path: str = "models/bert_sentiment_vietnamese",
+) -> Tuple[PreTrainedTokenizerBase, AutoModelForSequenceClassification, torch.device]:
+    """Load tokenizer and model from local or Hugging Face, and move to device."""
 
-    Trả về tokenizer, mô hình ở chế độ eval, và thiết bị sử dụng.
-    """
     if not os.path.exists(model_path):
         model_name = "hieudinhpro/BERT_Sentiment_Vietnamese"
 
@@ -53,12 +63,14 @@ def load_model(model_path="models/bert_sentiment_vietnamese"):
 
 
 def analyze_sentiment(
-    df_comments_processed: pd.DataFrame, model, tokenizer, device, labels
-):
-    """
-    Phân tích cảm xúc của bình luận trong file CSV.
-    Đọc dữ liệu, mã hóa văn bản, dự đoán nhãn cảm xúc và lưu kết quả.
-    """
+    df_comments_processed: pd.DataFrame,
+    model: AutoModelForSequenceClassification,
+    tokenizer: PreTrainedTokenizerBase,
+    device: torch.device,
+    labels: List[str],
+) -> pd.DataFrame:
+    """Predict sentiment labels for all comments in the DataFrame."""
+
     texts = df_comments_processed["comment"].fillna("").tolist()
 
     dataset = CommentDataset(texts)
@@ -82,9 +94,10 @@ def analyze_sentiment(
 
 def run_sentiment_analysis(
     df_comments_processed: pd.DataFrame,
-    model_path="models/bert_sentiment_vietnamese",
-):
-    """Chạy phân tích cảm xúc trên bình luận Facebook"""
+    model_path: str = "models/bert_sentiment_vietnamese",
+) -> pd.DataFrame:
+    """Run sentiment analysis pipeline and return the labeled DataFrame."""
+
     print("\nRunning sentiment analysis...")
     labels = ["negative", "neutral", "positive"]
     tokenizer, model, device = load_model(model_path)
