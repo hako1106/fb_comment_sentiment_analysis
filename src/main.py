@@ -1,6 +1,6 @@
-from data_cleaning import data_cleaning
-from facebook_crawling import facebook_crawling
-from sentiment_analysis import sentiment_analysis
+from data_processing import run_data_cleaning
+from facebook_crawling import run_facebook_crawling
+from sentiment_analysis import run_sentiment_analysis
 
 
 def main():
@@ -13,16 +13,21 @@ def main():
         if link:
             post_links.append(link)
 
-    facebook_crawling(post_links)
+    df_posts, df_comments = run_facebook_crawling(post_links)
 
-    data_cleaning()
+    df_posts_processed, df_comments_processed = run_data_cleaning(df_posts, df_comments)
 
-    df = sentiment_analysis()
+    df_comments_processed_with_sentiment = run_sentiment_analysis(df_comments_processed)
+
+    print(
+        "\nData processing completed. Here are the first few rows of the processed posts:"
+    )
+    print(df_posts_processed[["url", "content", "total_engagement"]].head())
 
     print(
         "\nSentiment analysis completed. Here are the first few rows of the processed data:"
     )
-    print(df[["comment_text_remove_emojis", "sentiment"]].head())
+    print(df_comments_processed_with_sentiment[["comment", "sentiment"]].head())
 
 
 if __name__ == "__main__":
