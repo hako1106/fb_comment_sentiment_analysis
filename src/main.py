@@ -1,6 +1,6 @@
-from data_cleaning import data_cleaning
-from facebook_crawling import facebook_crawling
-from sentiment_analysis import sentiment_analysis
+from data_cleaning import run_data_cleaning
+from facebook_crawling import run_facebook_crawling
+from sentiment_analysis import run_sentiment_analysis
 
 
 def main():
@@ -13,11 +13,11 @@ def main():
         if link:
             post_links.append(link)
 
-    facebook_crawling(post_links)
+    run_facebook_crawling(post_links)
 
-    data_cleaning()
+    run_data_cleaning()
 
-    df = sentiment_analysis()
+    df = run_sentiment_analysis()
 
     print(
         "\nSentiment analysis completed. Here are the first few rows of the processed data:"
