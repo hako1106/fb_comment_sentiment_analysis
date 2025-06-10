@@ -1,8 +1,9 @@
 import os
+
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 class CommentDataset(Dataset):
@@ -41,7 +42,6 @@ def load_model(model_path="models/bert_sentiment_vietnamese"):
         tokenizer.save_pretrained(model_path)
         model.save_pretrained(model_path)
     else:
-        # Load từ local
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
@@ -52,13 +52,14 @@ def load_model(model_path="models/bert_sentiment_vietnamese"):
     return tokenizer, model, device
 
 
-def analyze_sentiment(input_path, output_path, model, tokenizer, device, labels):
+def analyze_sentiment(
+    df_comments_processed: pd.DataFrame, model, tokenizer, device, labels
+):
     """
     Phân tích cảm xúc của bình luận trong file CSV.
     Đọc dữ liệu, mã hóa văn bản, dự đoán nhãn cảm xúc và lưu kết quả.
     """
-    df = pd.read_csv(input_path)
-    texts = df['comment_text_remove_emojis'].fillna("").tolist()
+    texts = df_comments_processed["comment"].fillna("").tolist()
 
     dataset = CommentDataset(texts)
     dataloader = DataLoader(
@@ -74,25 +75,27 @@ def analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
             preds = torch.argmax(probs, dim=-1)
             all_preds.extend(preds.cpu().tolist())
 
-    df['sentiment'] = [labels[p] for p in all_preds]
-    df.to_csv(output_path, index=False)
+    df_comments_processed["sentiment"] = [labels[p] for p in all_preds]
 
-    return df
+    return df_comments_processed
 
 
 def run_sentiment_analysis(
-    input_path="data/processed/facebook_comments_processed.csv",
-    output_path="data/processed/facebook_comments_processed_with_sentiment.csv",
-    model_path="models/bert_sentiment_vietnamese"
+    df_comments_processed: pd.DataFrame,
+    model_path="models/bert_sentiment_vietnamese",
 ):
     """Chạy phân tích cảm xúc trên bình luận Facebook"""
     print("\nRunning sentiment analysis...")
-    labels = ['negative', 'neutral', 'positive']
+    labels = ["negative", "neutral", "positive"]
     tokenizer, model, device = load_model(model_path)
-    return analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
+    return analyze_sentiment(df_comments_processed, model, tokenizer, device, labels)
 
 
 if __name__ == "__main__":
-    df = run_sentiment_analysis()
+    df_comments_processed = pd.read_csv(
+        "data/processed/facebook_comments_processed.csv"
+    )
+
+    df_comments_processed_with_sentiment = run_sentiment_analysis(df_comments_processed)
     print("Sentiment analysis completed successfully.")
-    print(df.head())
+    print(df_comments_processed_with_sentiment.head())
