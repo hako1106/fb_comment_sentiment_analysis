@@ -41,7 +41,7 @@ def load_and_clean_comments(df_comments: pd.DataFrame) -> pd.DataFrame:
     return df_comments
 
 
-def run_data_cleaning(
+def run_data_processing(
     df_posts: pd.DataFrame,
     df_comments: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -59,7 +59,9 @@ if __name__ == "__main__":
     df_posts = pd.read_csv("data/crawl/facebook_posts.csv")
     df_comments = pd.read_csv("data/crawl/facebook_comments.csv")
 
-    df_posts_processed, df_comments_processed = run_data_cleaning(df_posts, df_comments)
+    df_posts_processed, df_comments_processed = run_data_processing(
+        df_posts, df_comments
+    )
 
     print("Data cleaning completed.")
     print(f"Posts: \n{df_posts_processed.head()}")
