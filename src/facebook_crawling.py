@@ -1,13 +1,15 @@
 import random
 import re
 import time
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
 
-def setup_browser_context(browser):
-    """Set up browser context with optimized settings for Facebook"""
+def setup_browser_context(browser: Browser) -> BrowserContext:
+    """Create a browser context with custom viewport and user-agent."""
+
     context = browser.new_context(
         viewport={"width": 1920, "height": 1080},
         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -15,8 +17,9 @@ def setup_browser_context(browser):
     return context
 
 
-def wait_for_page_load(page, timeout=10):
-    """Wait for the page to fully load"""
+def wait_for_page_load(page: Page, timeout: int = 10) -> None:
+    """Wait until the page finishes loading."""
+
     try:
         page.wait_for_load_state("networkidle", timeout=timeout * 1000)
         # time.sleep(random.uniform(1, 2))
@@ -24,8 +27,9 @@ def wait_for_page_load(page, timeout=10):
         time.sleep(2)
 
 
-def extract_engagement_metrics(page):
-    """Extracts engagement metrics (reactions, comments, shares) from a social media post."""
+def extract_engagement_metrics(page: Page) -> Dict[str, int]:
+    """Extract reaction, comment, and share counts from the post."""
+
     metrics = {
         "reactions_count": 0,
         "comments_count": 0,
@@ -102,8 +106,9 @@ def extract_engagement_metrics(page):
     return metrics
 
 
-def extract_post_content(page):
-    """Extracts the main text content of a social media post."""
+def extract_post_content(page: Page) -> str:
+    """Extract main text content of the Facebook post."""
+
     try:
         element = page.locator('[data-ad-preview="message"]').first
         if element.is_visible():
@@ -115,8 +120,9 @@ def extract_post_content(page):
     return ""
 
 
-def extract_post_metadata(page):
-    """Extract post metadata (time, author, etc.)"""
+def extract_post_metadata(page: Page) -> Dict[str, str]:
+    """Extract post metadata like author name."""
+
     metadata = {"author": ""}
 
     try:
@@ -139,8 +145,9 @@ def extract_post_metadata(page):
     return metadata
 
 
-def extract_comments(page):
-    """Extract comments from the post area (not the entire page)"""
+def extract_comments(page: Page) -> List[Dict[str, str]]:
+    """Extract visible comments from the post area."""
+
     comments = []
 
     try:
@@ -181,6 +188,7 @@ def extract_comments(page):
                 )
                 if current_height == previous_height:
                     scrollable_container.evaluate("(el) => el.scrollBy(0, 2500)")
+                    time.sleep(random.uniform(1, 2))
 
                     current_height = scrollable_container.evaluate(
                         "(el) => el.scrollHeight"
@@ -226,8 +234,9 @@ def extract_comments(page):
     return comments
 
 
-def crawl_facebook_post(page, url):
-    """Crawl a complete Facebook post"""
+def crawl_facebook_post(page: Page, url: str) -> Dict[str, Any]:
+    """Crawl all post data including content, metadata, and comments."""
+
     try:
         page.goto(url, timeout=30000)
         wait_for_page_load(page)
@@ -265,8 +274,9 @@ def crawl_facebook_post(page, url):
         }
 
 
-def check_post_links(post_links=None):
-    """Check if post links are valid"""
+def check_post_links(post_links: Optional[List[str]] = None) -> bool:
+    """Validate the format of Facebook post URLs."""
+
     if not post_links:
         print("No links were entered!")
         return False
@@ -277,74 +287,60 @@ def check_post_links(post_links=None):
     return True
 
 
-def run_facebook_crawling(post_links=None):
-    """Main function to crawl Facebook posts"""
+def run_facebook_crawling(
+    post_links: Optional[List[str]] = None,
+) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
+    """Crawl multiple Facebook posts and return their data as DataFrames."""
+
     print("\nCrawling data from Facebook posts...")
 
     if not check_post_links(post_links):
-        return
-    else:
-        posts_summary = []
-        all_comments = []
+        return None, None
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=True,
-                args=["--no-sandbox", "--disable-blink-features=AutomationControlled"],
-            )
+    posts_summary = []
+    all_comments = []
 
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-blink-features=AutomationControlled"],
+        )
+        try:
             context = setup_browser_context(browser)
             page = context.new_page()
             page.on("dialog", lambda dialog: dialog.accept())
 
-            try:
-                for i, url in enumerate(post_links, 1):
-                    data = crawl_facebook_post(page, url)
+            for i, url in enumerate(post_links, 1):
+                data = crawl_facebook_post(page, url)
 
-                    posts_summary.append(
-                        {
-                            "url": data["url"],
-                            "author": data["author"],
-                            "content": data["content"],
-                            "reactions_count": data["reactions_count"],
-                            "comments_count": data["comments_count"],
-                            "shares_count": data["shares_count"],
-                            "total_comments_crawled": len(data["comments"]),
-                        }
-                    )
+                posts_summary.append(
+                    {
+                        "url": data["url"],
+                        "author": data["author"],
+                        "content": data["content"],
+                        "reactions_count": data["reactions_count"],
+                        "comments_count": data["comments_count"],
+                        "shares_count": data["shares_count"],
+                        "total_comments_crawled": len(data["comments"]),
+                    }
+                )
 
-                    for comment in data["comments"]:
-                        all_comments.append(
-                            {
-                                "url": data["url"],
-                                "comment_text": comment["comments_text"],
-                            }
-                        )
+                all_comments.extend(
+                    [
+                        {"url": data["url"], "comment_text": c["comments_text"]}
+                        for c in data["comments"]
+                    ]
+                )
 
-                    if i < len(post_links):
-                        time.sleep(random.uniform(1, 2))
-            finally:
-                browser.close()
+                if i < len(post_links):
+                    time.sleep(random.uniform(1, 2))
+        finally:
+            browser.close()
 
-    summary_df = pd.DataFrame(posts_summary)
-    comments_df = pd.DataFrame(all_comments)
+    df_posts = pd.DataFrame(posts_summary)
+    df_comments = pd.DataFrame(all_comments)
 
-    summary_file = "data/crawl/facebook_posts.csv"
-    comments_file = "data/crawl/facebook_comments.csv"
-
-    summary_df.to_csv(summary_file, index=False, encoding="utf-8-sig")
-    comments_df.to_csv(comments_file, index=False, encoding="utf-8-sig")
-
-    print("\nCrawling completed!")
-    print("Statistics:")
-    print(f"   - Total posts: {len(posts_summary)}")
-    print(f"   - Total comments: {len(all_comments)}")
-    print(
-        f"   - Total reactions: {sum(post.get('reactions_count', 0) for post in posts_summary)}"
-    )
-    print(
-        f"   - Total shares: {sum(post.get('shares_count', 0) for post in posts_summary)}"
-    )
+    return df_posts, df_comments
 
 
 if __name__ == "__main__":
@@ -357,4 +353,13 @@ if __name__ == "__main__":
         if link:
             post_links.append(link)
 
-    run_facebook_crawling(post_links)
+    df_posts, df_comments = run_facebook_crawling(post_links)
+
+    print("\nCrawling completed!")
+    print("Statistics:")
+    print(f"   - Total posts: {len(df_posts)}")
+    print(f"   - Total comments: {len(df_comments)}")
+    total_reactions = df_posts["reactions_count"].fillna(0).sum()
+    total_shares = df_posts["shares_count"].fillna(0).sum()
+    print(f"   - Total reactions: {int(total_reactions)}")
+    print(f"   - Total shares: {int(total_shares)}")
