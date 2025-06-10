@@ -1,8 +1,9 @@
 import os
+
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from torch.utils.data import DataLoader, Dataset
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 
 class CommentDataset(Dataset):
@@ -58,7 +59,7 @@ def analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
     Đọc dữ liệu, mã hóa văn bản, dự đoán nhãn cảm xúc và lưu kết quả.
     """
     df = pd.read_csv(input_path)
-    texts = df['comment_text_remove_emojis'].fillna("").tolist()
+    texts = df["comment_text_remove_emojis"].fillna("").tolist()
 
     dataset = CommentDataset(texts)
     dataloader = DataLoader(
@@ -74,7 +75,7 @@ def analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
             preds = torch.argmax(probs, dim=-1)
             all_preds.extend(preds.cpu().tolist())
 
-    df['sentiment'] = [labels[p] for p in all_preds]
+    df["sentiment"] = [labels[p] for p in all_preds]
     df.to_csv(output_path, index=False)
 
     return df
@@ -83,11 +84,11 @@ def analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
 def run_sentiment_analysis(
     input_path="data/processed/facebook_comments_processed.csv",
     output_path="data/processed/facebook_comments_processed_with_sentiment.csv",
-    model_path="models/bert_sentiment_vietnamese"
+    model_path="models/bert_sentiment_vietnamese",
 ):
     """Chạy phân tích cảm xúc trên bình luận Facebook"""
     print("\nRunning sentiment analysis...")
-    labels = ['negative', 'neutral', 'positive']
+    labels = ["negative", "neutral", "positive"]
     tokenizer, model, device = load_model(model_path)
     return analyze_sentiment(input_path, output_path, model, tokenizer, device, labels)
 
