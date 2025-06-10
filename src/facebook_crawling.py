@@ -171,7 +171,6 @@ def extract_comments(page):
                 current_height = scrollable_container.evaluate("(el) => el.scrollHeight")
                 if current_height == previous_height:
                     scrollable_container.evaluate("(el) => el.scrollBy(0, 2500)")
-                    time.sleep(random.uniform(1, 2))
 
                     current_height = scrollable_container.evaluate("(el) => el.scrollHeight")
                     if current_height == previous_height:
@@ -306,7 +305,7 @@ def run_facebook_crawling(post_links=None):
                         })
 
                     if i < len(post_links):
-                        time.sleep(random.uniform(2, 3))
+                        time.sleep(random.uniform(1, 2))
             finally:
                 browser.close()
 
