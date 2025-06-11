@@ -42,24 +42,30 @@ def load_model(
 ) -> Tuple[PreTrainedTokenizerBase, AutoModelForSequenceClassification, torch.device]:
     """Load tokenizer and model from local or Hugging Face, and move to device."""
 
-    if not os.path.exists(model_path):
-        model_name = "hieudinhpro/BERT_Sentiment_Vietnamese"
+    try:
+        if not os.path.exists(model_path):
+            model_name = "hieudinhpro/BERT_Sentiment_Vietnamese"
 
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-        os.makedirs(model_path, exist_ok=True)
-        tokenizer.save_pretrained(model_path)
-        model.save_pretrained(model_path)
-    else:
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        model = AutoModelForSequenceClassification.from_pretrained(model_path)
+            os.makedirs(model_path, exist_ok=True)
+            tokenizer.save_pretrained(model_path)
+            model.save_pretrained(model_path)
+        else:
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            model = AutoModelForSequenceClassification.from_pretrained(model_path)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.eval()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+        model.eval()
 
-    return tokenizer, model, device
+        return tokenizer, model, device
+
+    except Exception:
+        raise RuntimeError(
+            "Không thể tải mô hình. Vui lòng kiểm tra đường dẫn hoặc kết nối mạng."
+        )
 
 
 def analyze_sentiment(
@@ -71,25 +77,34 @@ def analyze_sentiment(
 ) -> pd.DataFrame:
     """Predict sentiment labels for all comments in the DataFrame."""
 
-    texts = df_comments_processed["comment"].fillna("").tolist()
+    try:
+        if "comment" not in df_comments_processed.columns:
+            raise ValueError(
+                "File không chứa cột 'comment'. Vui lòng kiểm tra lại dữ liệu đầu vào."
+            )
 
-    dataset = CommentDataset(texts)
-    dataloader = DataLoader(
-        dataset, batch_size=16, collate_fn=lambda x: collate_batch(x, tokenizer)
-    )
+        texts = df_comments_processed["comment"].fillna("").tolist()
 
-    all_preds = []
-    with torch.no_grad():
-        for batch in dataloader:
-            batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
-            probs = torch.softmax(outputs.logits, dim=-1)
-            preds = torch.argmax(probs, dim=-1)
-            all_preds.extend(preds.cpu().tolist())
+        dataset = CommentDataset(texts)
+        dataloader = DataLoader(
+            dataset, batch_size=16, collate_fn=lambda x: collate_batch(x, tokenizer)
+        )
 
-    df_comments_processed["sentiment"] = [labels[p] for p in all_preds]
+        all_preds = []
+        with torch.no_grad():
+            for batch in dataloader:
+                batch = {k: v.to(device) for k, v in batch.items()}
+                outputs = model(**batch)
+                probs = torch.softmax(outputs.logits, dim=-1)
+                preds = torch.argmax(probs, dim=-1)
+                all_preds.extend(preds.cpu().tolist())
 
-    return df_comments_processed
+        df_comments_processed["sentiment"] = [labels[p] for p in all_preds]
+
+        return df_comments_processed
+
+    except Exception:
+        raise RuntimeError("Đã xảy ra lỗi khi phân tích cảm xúc. Vui lòng thử lại sau.")
 
 
 def run_sentiment_analysis(
@@ -105,10 +120,16 @@ def run_sentiment_analysis(
 
 
 if __name__ == "__main__":
-    df_comments_processed = pd.read_csv(
-        "data/processed/facebook_comments_processed.csv"
-    )
+    try:
+        df_comments_processed = pd.read_csv(
+            "data/processed/facebook_comments_processed.csv"
+        )
+        df_comments_processed_with_sentiment = run_sentiment_analysis(
+            df_comments_processed
+        )
+        print("Phân tích cảm xúc hoàn tất.")
+        print(df_comments_processed_with_sentiment.head())
 
-    df_comments_processed_with_sentiment = run_sentiment_analysis(df_comments_processed)
-    print("Sentiment analysis completed successfully.")
-    print(df_comments_processed_with_sentiment.head())
+    except Exception as e:
+        print("❌ Đã xảy ra lỗi:")
+        print(e)
