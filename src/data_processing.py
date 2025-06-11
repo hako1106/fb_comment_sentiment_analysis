@@ -49,10 +49,15 @@ def run_data_processing(
 
     print("\nCleaning data crawled...")
 
-    df_posts_processed = load_and_clean_posts(df_posts)
-    df_comments_processed = load_and_clean_comments(df_comments)
+    try:
+        df_posts_processed = load_and_clean_posts(df_posts)
+        df_comments_processed = load_and_clean_comments(df_comments)
 
-    return df_posts_processed, df_comments_processed
+        return df_posts_processed, df_comments_processed
+
+    except Exception as e:
+        print(f"Error during data cleaning: {e}")
+        raise
 
 
 if __name__ == "__main__":
