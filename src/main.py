@@ -1,4 +1,4 @@
-from data_processing import run_data_cleaning
+from data_processing import run_data_processing
 from facebook_crawling import run_facebook_crawling
 from sentiment_analysis import run_sentiment_analysis
 
@@ -15,7 +15,9 @@ def main():
 
     df_posts, df_comments = run_facebook_crawling(post_links)
 
-    df_posts_processed, df_comments_processed = run_data_cleaning(df_posts, df_comments)
+    df_posts_processed, df_comments_processed = run_data_processing(
+        df_posts, df_comments
+    )
 
     df_comments_processed_with_sentiment = run_sentiment_analysis(df_comments_processed)
 
