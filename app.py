@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.data_cleaning import run_data_cleaning
+from src.data_processing import run_data_processing
 from src.facebook_crawling import run_facebook_crawling
 from src.sentiment_analysis import run_sentiment_analysis
 
@@ -47,17 +47,21 @@ def main():
 
             # Bước 1: Crawl dữ liệu
             status_text.text("🔍 Đang crawl dữ liệu từ Facebook...")
-            run_facebook_crawling(post_links)
+            df_posts, df_comments = run_facebook_crawling(post_links)
             progress_bar.progress(25)
 
             # Bước 2: Làm sạch dữ liệu
             status_text.text("🧼 Đang làm sạch dữ liệu...")
-            run_data_cleaning()
+            df_posts_processed, df_comments_processed = run_data_processing(
+                df_posts, df_comments
+            )
             progress_bar.progress(50)
 
             # Bước 3: Phân tích cảm xúc
             status_text.text("🤖 Đang phân tích cảm xúc...")
-            df = run_sentiment_analysis()
+            df_comments_processed_with_sentiment = run_sentiment_analysis(
+                df_comments_processed
+            )
             progress_bar.progress(75)
 
             # Hoàn tất
@@ -66,7 +70,7 @@ def main():
             st.success("✅ Phân tích cảm xúc hoàn tất!")
 
             # Lưu kết quả vào session state
-            st.session_state.df_results = df
+            st.session_state.df_results = df_comments_processed_with_sentiment
 
         except Exception as e:
             st.error("❌ Có lỗi xảy ra:")
