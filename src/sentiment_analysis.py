@@ -78,11 +78,6 @@ def analyze_sentiment(
     """Predict sentiment labels for all comments in the DataFrame."""
 
     try:
-        if "comment" not in df_comments_processed.columns:
-            raise ValueError(
-                "File không chứa cột 'comment'. Vui lòng kiểm tra lại dữ liệu đầu vào."
-            )
-
         texts = df_comments_processed["comment"].fillna("").tolist()
 
         dataset = CommentDataset(texts)
@@ -131,5 +126,4 @@ if __name__ == "__main__":
         print(df_comments_processed_with_sentiment.head())
 
     except Exception as e:
-        print("❌ Đã xảy ra lỗi:")
-        print(e)
+        print(f"❌ {e}")
