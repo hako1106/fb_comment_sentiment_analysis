@@ -259,31 +259,24 @@ def crawl_facebook_post(page: Page, url: str) -> Dict[str, Any]:
 
         return result
 
-    except Exception as e:
-        print(f"Error crawling {url}: {e}")
-
-        return {
-            "url": url,
-            "author": "",
-            "content": "",
-            "reactions_count": 0,
-            "comments_count": 0,
-            "shares_count": 0,
-            "comments": [],
-            "error": str(e),
-        }
+    except Exception:
+        raise RuntimeError(
+            f"Không thể thu thập dữ liệu từ liên kết: {url}. Vui lòng kiểm tra lại liên kết hoặc thử lại sau."
+        )
 
 
 def check_post_links(post_links: Optional[List[str]] = None) -> bool:
     """Validate the format of Facebook post URLs."""
 
     if not post_links:
-        print("No links were entered!")
-        return False
+        raise ValueError(
+            "Bạn chưa nhập đường dẫn nào. Vui lòng nhập ít nhất 1 liên kết bài viết."
+        )
+
     for link in post_links:
         if not re.match(r"https?://www\.facebook\.com/[^/]+/posts/[^/?]+", link):
-            print(f"Invalid link format: {link}")
-            return False
+            raise ValueError(f"Liên kết không hợp lệ: {link}")
+
     return True
 
 
@@ -294,8 +287,10 @@ def run_facebook_crawling(
 
     print("\nCrawling data from Facebook posts...")
 
-    if not check_post_links(post_links):
-        return None, None
+    try:
+        check_post_links(post_links)
+    except ValueError as e:
+        raise ValueError(str(e))
 
     posts_summary = []
     all_comments = []
@@ -311,7 +306,11 @@ def run_facebook_crawling(
             page.on("dialog", lambda dialog: dialog.accept())
 
             for i, url in enumerate(post_links, 1):
-                data = crawl_facebook_post(page, url)
+                try:
+                    data = crawl_facebook_post(page, url)
+                except RuntimeError as e:
+                    print(str(e))
+                    continue
 
                 posts_summary.append(
                     {
@@ -337,29 +336,40 @@ def run_facebook_crawling(
         finally:
             browser.close()
 
-    df_posts = pd.DataFrame(posts_summary)
-    df_comments = pd.DataFrame(all_comments)
-
-    return df_posts, df_comments
+    return pd.DataFrame(posts_summary), pd.DataFrame(all_comments)
 
 
 if __name__ == "__main__":
-    post_links = []
-    print("Enter Facebook post links (type 'done' when finished):")
-    while True:
-        link = input("Link: ").strip()
-        if link.lower() == "done":
-            break
-        if link:
-            post_links.append(link)
+    try:
+        post_links = []
+        print("Nhập các liên kết bài viết Facebook (gõ 'done' để kết thúc):")
+        while True:
+            link = input("Link: ").strip()
+            if link.lower() == "done":
+                break
+            if link:
+                post_links.append(link)
 
-    df_posts, df_comments = run_facebook_crawling(post_links)
+        df_posts, df_comments = run_facebook_crawling(post_links)
 
-    print("\nCrawling completed!")
-    print("Statistics:")
-    print(f"   - Total posts: {len(df_posts)}")
-    print(f"   - Total comments: {len(df_comments)}")
-    total_reactions = df_posts["reactions_count"].fillna(0).sum()
-    total_shares = df_posts["shares_count"].fillna(0).sum()
-    print(f"   - Total reactions: {int(total_reactions)}")
-    print(f"   - Total shares: {int(total_shares)}")
+        if df_posts is None or df_comments is None:
+            print(
+                "❌ Không thể thu thập dữ liệu. Vui lòng kiểm tra các liên kết và thử lại."
+            )
+        else:
+            print("\n✅ Đã thu thập xong!")
+            print("📊 Thống kê:")
+            print(f"   - Số bài viết: {len(df_posts)}")
+            print(f"   - Tổng số bình luận: {len(df_comments)}")
+            total_reactions = df_posts["reactions_count"].fillna(0).sum()
+            total_shares = df_posts["shares_count"].fillna(0).sum()
+            print(f"   - Tổng số lượt cảm xúc: {int(total_reactions)}")
+            print(f"   - Tổng số lượt chia sẻ: {int(total_shares)}")
+
+    except ValueError as e:
+        print(f"❌ Lỗi: {e}")
+
+    except Exception:
+        print(
+            "❌ Đã xảy ra lỗi không xác định. Vui lòng thử lại hoặc kiểm tra mã nguồn."
+        )
