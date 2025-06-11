@@ -25,6 +25,7 @@ def wait_for_page_load(page: Page, timeout: int = 10) -> None:
         # time.sleep(random.uniform(1, 2))
     except Exception:
         time.sleep(2)
+        raise
 
 
 def extract_engagement_metrics(page: Page) -> Dict[str, int]:
@@ -73,7 +74,7 @@ def extract_engagement_metrics(page: Page) -> Dict[str, int]:
                     )
                     break
         except Exception:
-            pass
+            raise
 
     for selector in comment_selectors:
         try:
@@ -87,7 +88,7 @@ def extract_engagement_metrics(page: Page) -> Dict[str, int]:
                     )
                     break
         except Exception:
-            pass
+            raise
 
     for selector in share_selectors:
         try:
@@ -101,7 +102,7 @@ def extract_engagement_metrics(page: Page) -> Dict[str, int]:
                     )
                     break
         except Exception:
-            pass
+            raise
 
     return metrics
 
@@ -116,7 +117,7 @@ def extract_post_content(page: Page) -> str:
             if content and len(content) > 0:
                 return content.strip()
     except Exception:
-        pass
+        raise
     return ""
 
 
@@ -159,6 +160,7 @@ def extract_comments(page: Page) -> List[Dict[str, str]]:
                 time.sleep(1)
         except Exception:
             print("Could not find or click 'Most relevant'.")
+            raise
 
         # Click "All comments" if available
         try:
@@ -170,6 +172,7 @@ def extract_comments(page: Page) -> List[Dict[str, str]]:
                 time.sleep(2)
         except Exception:
             print("Could not find or click 'All comments'.")
+            raise
 
         # Scroll down to load all comments
         try:
@@ -199,6 +202,7 @@ def extract_comments(page: Page) -> List[Dict[str, str]]:
                 previous_height = current_height
         except Exception as e:
             print(f"Scroll error: {e}")
+            raise
 
         # Extract comments
         comment_elements = page.locator(
@@ -300,47 +304,52 @@ def run_facebook_crawling(
     posts_summary = []
     all_comments = []
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-blink-features=AutomationControlled"],
-        )
-        try:
-            context = setup_browser_context(browser)
-            page = context.new_page()
-            page.on("dialog", lambda dialog: dialog.accept())
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-blink-features=AutomationControlled"],
+            )
+            try:
+                context = setup_browser_context(browser)
+                page = context.new_page()
+                page.on("dialog", lambda dialog: dialog.accept())
 
-            for i, url in enumerate(post_links, 1):
-                data = crawl_facebook_post(page, url)
+                for i, url in enumerate(post_links, 1):
+                    data = crawl_facebook_post(page, url)
 
-                posts_summary.append(
-                    {
-                        "url": data["url"],
-                        "author": data["author"],
-                        "content": data["content"],
-                        "reactions_count": data["reactions_count"],
-                        "comments_count": data["comments_count"],
-                        "shares_count": data["shares_count"],
-                        "total_comments_crawled": len(data["comments"]),
-                    }
-                )
+                    posts_summary.append(
+                        {
+                            "url": data["url"],
+                            "author": data["author"],
+                            "content": data["content"],
+                            "reactions_count": data["reactions_count"],
+                            "comments_count": data["comments_count"],
+                            "shares_count": data["shares_count"],
+                            "total_comments_crawled": len(data["comments"]),
+                        }
+                    )
 
-                all_comments.extend(
-                    [
-                        {"url": data["url"], "comment_text": c["comments_text"]}
-                        for c in data["comments"]
-                    ]
-                )
+                    all_comments.extend(
+                        [
+                            {"url": data["url"], "comment_text": c["comments_text"]}
+                            for c in data["comments"]
+                        ]
+                    )
 
-                if i < len(post_links):
-                    time.sleep(random.uniform(1, 2))
-        finally:
-            browser.close()
+                    if i < len(post_links):
+                        time.sleep(random.uniform(1, 2))
+            finally:
+                browser.close()
 
-    df_posts = pd.DataFrame(posts_summary)
-    df_comments = pd.DataFrame(all_comments)
+        df_posts = pd.DataFrame(posts_summary)
+        df_comments = pd.DataFrame(all_comments)
 
-    return df_posts, df_comments
+        return df_posts, df_comments
+
+    except Exception as e:
+        print(f"Error during crawling: {e}")
+        raise
 
 
 if __name__ == "__main__":
