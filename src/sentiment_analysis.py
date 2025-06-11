@@ -91,7 +91,7 @@ def analyze_sentiment(
 
     return df_comments_processed
 
-  
+
 def run_sentiment_analysis(
     df_comments_processed: pd.DataFrame,
     model_path: str = "models/bert_sentiment_vietnamese",
