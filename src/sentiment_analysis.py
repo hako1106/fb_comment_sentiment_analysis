@@ -99,17 +99,9 @@ def run_sentiment_analysis(
     """Run sentiment analysis pipeline and return the labeled DataFrame."""
 
     print("\nRunning sentiment analysis...")
-
-    try:
-        labels = ["negative", "neutral", "positive"]
-        tokenizer, model, device = load_model(model_path)
-        return analyze_sentiment(
-            df_comments_processed, model, tokenizer, device, labels
-        )
-
-    except Exception as e:
-        print(f"Error during sentiment analysis: {e}")
-        raise
+    labels = ["negative", "neutral", "positive"]
+    tokenizer, model, device = load_model(model_path)
+    return analyze_sentiment(df_comments_processed, model, tokenizer, device, labels)
 
 
 if __name__ == "__main__":
