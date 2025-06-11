@@ -49,20 +49,31 @@ def run_data_processing(
 
     print("\nCleaning data crawled...")
 
-    df_posts_processed = load_and_clean_posts(df_posts)
-    df_comments_processed = load_and_clean_comments(df_comments)
+    try:
+        df_posts_processed = load_and_clean_posts(df_posts)
+        df_comments_processed = load_and_clean_comments(df_comments)
 
-    return df_posts_processed, df_comments_processed
+        return df_posts_processed, df_comments_processed
+
+    except Exception:
+        raise RuntimeError("Đã xảy ra lỗi trong quá trình xử lý dữ liệu.")
 
 
 if __name__ == "__main__":
-    df_posts = pd.read_csv("data/crawl/facebook_posts.csv")
-    df_comments = pd.read_csv("data/crawl/facebook_comments.csv")
+    try:
+        df_posts = pd.read_csv("data/crawl/facebook_posts.csv")
+        df_comments = pd.read_csv("data/crawl/facebook_comments.csv")
 
-    df_posts_processed, df_comments_processed = run_data_processing(
-        df_posts, df_comments
-    )
+        df_posts_processed, df_comments_processed = run_data_processing(
+            df_posts, df_comments
+        )
 
-    print("Data cleaning completed.")
-    print(f"Posts: \n{df_posts_processed.head()}")
-    print(f"\nComments: \n{df_comments_processed.head()}")
+        print("✅ Dữ liệu đã được làm sạch.")
+        print(f"\n📌 Bài viết:\n{df_posts_processed.head()}")
+        print(f"\n💬 Bình luận:\n{df_comments_processed.head()}")
+
+    except RuntimeError as e:
+        print(f"❌ {str(e)}")
+
+    except Exception:
+        print("❌ Đã xảy ra lỗi không xác định trong quá trình xử lý dữ liệu.")
