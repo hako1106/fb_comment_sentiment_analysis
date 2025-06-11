@@ -349,7 +349,7 @@ def run_facebook_crawling(
 
     except Exception as e:
         print(f"Error during crawling: {e}")
-        raise
+        raise e
 
 
 if __name__ == "__main__":
