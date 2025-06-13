@@ -1,0 +1,11 @@
+.git/
+data/
+models/
+notebooks/
+
+__pycache__/
+
+demo.gif
+khong_ban_lap_top.txt
+README.md
+.gitignore
