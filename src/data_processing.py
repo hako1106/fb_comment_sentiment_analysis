@@ -8,12 +8,14 @@ import pandas as pd
 def load_and_clean_posts(df_posts: pd.DataFrame) -> pd.DataFrame:
     """Clean and enrich the Facebook posts DataFrame."""
 
-    df_posts["content"] = df_posts["content"].fillna("Cập nhật ảnh bìa")
+    df_posts["content"] = df_posts["content"].replace(
+        to_replace=[None, "", pd.NA], value="Cập nhật ảnh bìa"
+    )
 
     df_posts["total_engagement"] = (
         df_posts["reactions_count"].fillna(0)
         + df_posts["shares_count"].fillna(0)
-        + df_posts["comments_count"].fillna(0)
+        + df_posts["total_comments_crawled"].fillna(0)
     )
 
     return df_posts
@@ -68,12 +70,12 @@ if __name__ == "__main__":
             df_posts, df_comments
         )
 
-        print("✅ Dữ liệu đã được làm sạch.")
-        print(f"\n📌 Bài viết:\n{df_posts_processed.head()}")
-        print(f"\n💬 Bình luận:\n{df_comments_processed.head()}")
+        print("Dữ liệu đã được làm sạch.")
+        print(f"\nBài viết:\n{df_posts_processed.head()}")
+        print(f"\nBình luận:\n{df_comments_processed.head()}")
 
     except RuntimeError as e:
-        print(f"❌ {str(e)}")
+        print(f"{str(e)}")
 
     except Exception:
-        print("❌ Đã xảy ra lỗi không xác định trong quá trình xử lý dữ liệu.")
+        print("Đã xảy ra lỗi không xác định trong quá trình xử lý dữ liệu.")

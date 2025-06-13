@@ -1,10 +1,15 @@
+import asyncio
 import random
 import re
+import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import pandas as pd
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 
 def setup_browser_context(browser: Browser) -> BrowserContext:
@@ -23,6 +28,7 @@ def wait_for_page_load(page: Page, timeout: int = 10) -> None:
     try:
         page.wait_for_load_state("networkidle", timeout=timeout * 1000)
         # time.sleep(random.uniform(1, 2))
+
     except Exception:
         time.sleep(2)
 
@@ -274,7 +280,7 @@ def check_post_links(post_links: Optional[List[str]] = None) -> bool:
         )
 
     for link in post_links:
-        if not re.match(r"https?://www\.facebook\.com/[^/]+/posts/[^/?]+", link):
+        if not re.match(r"https?://www\.facebook\.com/[^/]+/posts/[\w\d]+", link):
             raise ValueError(f"Liên kết không hợp lệ: {link}")
 
     return True
@@ -282,6 +288,7 @@ def check_post_links(post_links: Optional[List[str]] = None) -> bool:
 
 def run_facebook_crawling(
     post_links: Optional[List[str]] = None,
+    on_progress: Optional[Callable[[int, int], None]] = None,
 ) -> Tuple[Optional[pd.DataFrame], Optional[pd.DataFrame]]:
     """Crawl multiple Facebook posts and return their data as DataFrames."""
 
@@ -324,12 +331,20 @@ def run_facebook_crawling(
                     }
                 )
 
-                all_comments.extend(
-                    [
-                        {"url": data["url"], "comment_text": c["comments_text"]}
-                        for c in data["comments"]
-                    ]
-                )
+                comments = data.get("comments")
+
+                if isinstance(comments, list) and comments:
+                    all_comments.extend(
+                        [
+                            {"url": data["url"], "comment_text": c["comments_text"]}
+                            for c in comments
+                        ]
+                    )
+                else:
+                    all_comments.append({"url": data["url"], "comment_text": ""})
+
+                if on_progress:
+                    on_progress(i, len(post_links))
 
                 if i < len(post_links):
                     time.sleep(random.uniform(1, 2))
@@ -354,11 +369,11 @@ if __name__ == "__main__":
 
         if df_posts is None or df_comments is None:
             print(
-                "❌ Không thể thu thập dữ liệu. Vui lòng kiểm tra các liên kết và thử lại."
+                "Không thể thu thập dữ liệu. Vui lòng kiểm tra các liên kết và thử lại."
             )
         else:
-            print("\n✅ Đã thu thập xong!")
-            print("📊 Thống kê:")
+            print("\nĐã thu thập xong!")
+            print("Thống kê:")
             print(f"   - Số bài viết: {len(df_posts)}")
             print(f"   - Tổng số bình luận: {len(df_comments)}")
             total_reactions = df_posts["reactions_count"].fillna(0).sum()
@@ -367,9 +382,7 @@ if __name__ == "__main__":
             print(f"   - Tổng số lượt chia sẻ: {int(total_shares)}")
 
     except ValueError as e:
-        print(f"❌ Lỗi: {e}")
+        print(f"Lỗi: {e}")
 
     except Exception:
-        print(
-            "❌ Đã xảy ra lỗi không xác định. Vui lòng thử lại hoặc kiểm tra mã nguồn."
-        )
+        print("Đã xảy ra lỗi không xác định. Vui lòng thử lại hoặc kiểm tra mã nguồn.")
