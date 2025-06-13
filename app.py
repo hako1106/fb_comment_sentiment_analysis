@@ -1,21 +1,24 @@
+import pandas as pd
 import streamlit as st
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 from src.data_processing import run_data_processing
 from src.facebook_crawling import run_facebook_crawling
 from src.sentiment_analysis import run_sentiment_analysis
+from src.sentiment_charts import (
+    render_post_overview_chart,
+    render_sentiment_pie_chart,
+    render_wordcloud,
+)
 
 
-# ==============================
-# Cấu hình Streamlit và khắc phục lỗi context
-# ==============================
 def configure_streamlit():
     try:
-        from streamlit.runtime.scriptrunner import get_script_run_ctx
-
         if get_script_run_ctx() is None:
             st.set_option("deprecation.showPyplotGlobalUse", False)
     except Exception:
         pass
+
     st.set_page_config(
         page_title="Facebook Sentiment Analysis",
         layout="centered",
@@ -23,152 +26,128 @@ def configure_streamlit():
     )
 
 
-# ==============================
-# Hàm chính
-# ==============================
-def main():
-    configure_streamlit()
-    st.title("🧠 Facebook Sentiment Analysis")
-    st.markdown(
-        "Nhập các liên kết bài viết Facebook để thực hiện phân tích cảm xúc bình luận."
+def handle_link_input():
+    links_input = st.text_area("📌 Dán link bài viết Facebook (mỗi dòng 1 link):")
+    uploaded_file = st.file_uploader(
+        "📁 Hoặc tải lên file chứa link (.txt hoặc .csv)", type=["txt", "csv"]
     )
 
-    links_input = st.text_area("📌 Dán link bài viết Facebook (mỗi dòng 1 link):")
+    post_links = [link.strip() for link in links_input.splitlines() if link.strip()]
 
-    if st.button("🚀 Phân tích"):
-        post_links = [link.strip() for link in links_input.splitlines() if link.strip()]
-        if not post_links:
-            st.warning("⚠️ Bạn cần nhập ít nhất một liên kết.")
-            return
-
+    if uploaded_file:
         try:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
+            if uploaded_file.name.endswith(".txt"):
+                content = uploaded_file.read().decode("utf-8")
+                file_links = [
+                    line.strip() for line in content.splitlines() if line.strip()
+                ]
+            else:
+                df_file = pd.read_csv(uploaded_file)
+                file_links = df_file.iloc[:, 0].dropna().astype(str).tolist()
+            post_links.extend(file_links)
+        except Exception:
+            st.error("❌ Không thể đọc file. Vui lòng kiểm tra định dạng và nội dung.")
 
-            # Bước 1: Crawl dữ liệu
-            status_text.text("🔍 Đang crawl dữ liệu từ Facebook...")
-            df_posts, df_comments = run_facebook_crawling(post_links)
-            progress_bar.progress(25)
-
-            # Bước 2: Làm sạch dữ liệu
-            status_text.text("🧼 Đang làm sạch dữ liệu...")
-            df_posts_processed, df_comments_processed = run_data_processing(
-                df_posts, df_comments
-            )
-            progress_bar.progress(50)
-
-            # Bước 3: Phân tích cảm xúc
-            status_text.text("🤖 Đang phân tích cảm xúc...")
-            df_comments_processed_with_sentiment = run_sentiment_analysis(
-                df_comments_processed
-            )
-            progress_bar.progress(75)
-
-            # Hoàn tất
-            progress_bar.progress(100)
-            status_text.text("✅ Phân tích cảm xúc hoàn tất!")
-            st.success("✅ Phân tích cảm xúc hoàn tất!")
-
-            # Lưu kết quả vào session state
-            st.session_state.df_results = df_comments_processed_with_sentiment
-
-        except Exception as e:
-            st.error("❌ Có lỗi xảy ra:")
-            st.error(str(e))
-
-    # Hiển thị kết quả nếu có dữ liệu
-    if "df_results" in st.session_state and st.session_state.df_results is not None:
-        display_results(st.session_state.df_results)
+    return post_links
 
 
-# ==============================
-# Hàm hiển thị kết quả với chức năng lọc
-# ==============================
-def display_results(df):
-    if df is None or df.empty:
-        st.error("❌ Không có dữ liệu để hiển thị.")
+def run_analysis(post_links):
+    if not post_links:
+        st.warning("⚠️ Bạn cần nhập ít nhất một liên kết từ textarea hoặc từ file.")
         return
 
-    st.markdown("### 🔎 Kết quả:")
+    try:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
 
-    # Kiểm tra xem có cột sentiment không
-    if "sentiment" not in df.columns:
-        st.error("❌ Không tìm thấy cột 'sentiment' trong dữ liệu.")
-        return
+        status_text.text("🔍 Đang crawl dữ liệu từ Facebook...")
 
-    # Lấy danh sách các loại cảm xúc có trong dữ liệu
-    available_sentiments = df["sentiment"].unique().tolist()
+        def update_progress(current, total):
+            percent = int((current / total) * 25)
+            progress_bar.progress(percent)
 
-    # Tạo section lọc cảm xúc
+        df_posts, df_comments = run_facebook_crawling(
+            post_links, on_progress=update_progress
+        )
+
+        progress_bar.progress(50)
+        status_text.text("🧼 Đang làm sạch dữ liệu...")
+        df_posts_cleaned, df_comments_cleaned = run_data_processing(
+            df_posts, df_comments
+        )
+
+        progress_bar.progress(75)
+        status_text.text("🤖 Đang phân tích cảm xúc...")
+        df_comments_with_sentiment = run_sentiment_analysis(df_comments_cleaned)
+
+        progress_bar.progress(100)
+        status_text.text("✅ Phân tích cảm xúc hoàn tất!")
+
+        st.session_state.df_posts_cleaned = df_posts_cleaned
+        st.session_state.df_comments_with_sentiment = df_comments_with_sentiment
+
+    except Exception as e:
+        st.error("❌ Có lỗi xảy ra:")
+        st.error(str(e))
+
+
+def render_sentiment_filter(df):
     st.markdown("### 🎯 Lọc theo cảm xúc:")
-
-    # Tạo các nút lọc theo hàng ngang
     col1, col2, col3, col4 = st.columns(4)
 
-    # Khởi tạo session state cho filter nếu chưa có
-    if "selected_sentiment" not in st.session_state:
-        st.session_state.selected_sentiment = "Tất cả"
+    st.session_state.setdefault("selected_sentiment", "Tất cả")
+    available_sentiments = df["sentiment"].unique().tolist()
 
-    # Nút "Tất cả"
     with col1:
-        if st.button("📊 Tất cả", key="all_sentiments"):
+        if st.button("⭐ Tất cả", key="all_btn"):
             st.session_state.selected_sentiment = "Tất cả"
+            st.rerun()
 
-    # Nút cho từng loại cảm xúc (tối đa 3 nút còn lại)
-    sentiment_buttons = {
-        "positive": ("😊 Tích cực", "positive_btn"),
-        "negative": ("😞 Tiêu cực", "negative_btn"),
-        "neutral": ("😐 Trung tính", "neutral_btn"),
+    sentiments = {
+        "Tích cực": "😊 Tích cực",
+        "Tiêu cực": "😞 Tiêu cực",
+        "Trung tính": "😐 Trung tính",
     }
 
-    cols = [col2, col3, col4]
-    for i, (sentiment_key, (button_text, button_key)) in enumerate(
-        sentiment_buttons.items()
-    ):
-        if i < len(cols) and sentiment_key in available_sentiments:
-            with cols[i]:
-                if st.button(button_text, key=button_key):
-                    st.session_state.selected_sentiment = sentiment_key
+    for i, (key, label) in enumerate(sentiments.items()):
+        if key in available_sentiments:
+            with [col2, col3, col4][i]:
+                if st.button(label, key=f"{key}_btn"):
+                    st.session_state.selected_sentiment = key
+                    st.rerun()
 
-    # Thêm selectbox để lọc nếu có nhiều loại cảm xúc khác
-    other_sentiments = [
-        s for s in available_sentiments if s not in sentiment_buttons.keys()
-    ]
+    other_sentiments = [s for s in available_sentiments if s not in sentiments]
     if other_sentiments:
-        st.selectbox(
+        selected_other = st.selectbox(
             "Hoặc chọn cảm xúc khác:",
             ["Không chọn"] + other_sentiments,
             key="other_sentiment_select",
         )
-        if st.session_state.other_sentiment_select != "Không chọn":
-            st.session_state.selected_sentiment = (
-                st.session_state.other_sentiment_select
-            )
+        if selected_other != "Không chọn":
+            st.session_state.selected_sentiment = selected_other
+            st.rerun()
 
-    # Hiển thị cảm xúc đang được chọn
-    st.info(f"🎯 Đang hiển thị: **{st.session_state.selected_sentiment}**")
 
-    # Lọc dữ liệu theo cảm xúc được chọn
-    if st.session_state.selected_sentiment == "Tất cả":
-        filtered_df = df
-    else:
-        filtered_df = df[df["sentiment"] == st.session_state.selected_sentiment]
-
-    # Hiển thị số lượng kết quả
-    total_count = len(df)
-    filtered_count = len(filtered_df)
-    st.markdown(f"**Hiển thị {filtered_count} / {total_count} bình luận**")
-
-    # Hiển thị bảng dữ liệu đã lọc
-    display_columns = ["comment_text_remove_emojis", "sentiment"]
+def render_results_table(filtered_df):
+    display_columns = ["comment", "sentiment"]
     available_columns = [col for col in display_columns if col in filtered_df.columns]
 
-    if available_columns and not filtered_df.empty:
-        st.dataframe(filtered_df[available_columns], use_container_width=True)
+    if not available_columns or filtered_df.empty:
+        return False
 
-        # Nút tải CSV cho dữ liệu đã lọc
-        csv = filtered_df.to_csv(index=False)
-        filename = f"sentiment_results_{st.session_state.selected_sentiment.lower().replace(' ', '_')}.csv"
+    filtered_df = filtered_df[filtered_df["comment"].astype(str).str.strip() != ""]
+
+    if filtered_df.empty:
+        st.warning("⚠️ Không có bình luận để hiển thị.")
+        return True
+
+    st.dataframe(filtered_df[available_columns], use_container_width=True)
+
+    csv = filtered_df.to_csv(index=False)
+    filename = f"sentiment_results_{st.session_state.selected_sentiment.lower().replace(' ', '_')}.csv"
+
+    _, col2, _ = st.columns([1, 1, 1])
+    with col2:
         st.download_button(
             f"📥 Tải kết quả CSV ({st.session_state.selected_sentiment})",
             data=csv,
@@ -176,33 +155,96 @@ def display_results(df):
             mime="text/csv",
         )
 
-        # Biểu đồ thống kê tổng quan (luôn hiển thị tất cả)
-        st.markdown("### 📊 Thống kê tổng quan cảm xúc:")
-        sentiment_counts = df["sentiment"].value_counts()
+    return True
 
-        # Tạo 2 cột để hiển thị biểu đồ và thống kê số
-        chart_col, stats_col = st.columns([2, 1])
 
-        with chart_col:
-            st.bar_chart(sentiment_counts)
+def check_empty_comments(df_comments_with_sentiment):
+    df_comments_with_sentiment = df_comments_with_sentiment[
+        df_comments_with_sentiment["comment"].astype(str).str.strip() != ""
+    ]
 
-        with stats_col:
-            st.markdown("**Số lượng:**")
-            for sentiment, count in sentiment_counts.items():
-                percentage = (count / total_count) * 100
-                st.markdown(f"• {sentiment}: {count} ({percentage:.1f}%)")
+    if df_comments_with_sentiment.empty:
+        return True
 
-    elif filtered_df.empty:
-        st.warning(
-            f"❌ Không có bình luận nào có cảm xúc '{st.session_state.selected_sentiment}'"
+    return False
+
+
+def render_sentiment_stats(
+    df_posts_cleaned, df_comments_with_sentiment, comment_checked
+):
+    st.markdown("### 📊 Thống kê tổng quan:")
+    sentiment_counts = df_comments_with_sentiment["sentiment"].value_counts()
+
+    render_post_overview_chart(df_posts_cleaned)
+
+    render_sentiment_pie_chart(sentiment_counts, comment_checked)
+
+    render_wordcloud(df_comments_with_sentiment)
+
+
+def display_results(df_posts_cleaned, df_comments_with_sentiment):
+    if df_comments_with_sentiment is None or df_comments_with_sentiment.empty:
+        st.error("❌ Không có dữ liệu để hiển thị.")
+        return
+
+    st.markdown("### 🔎 Kết quả:")
+    if "sentiment" not in df_comments_with_sentiment.columns:
+        st.error("❌ Không tìm thấy cột 'sentiment' trong dữ liệu.")
+        return
+
+    render_sentiment_filter(df_comments_with_sentiment)
+    selected = st.session_state.selected_sentiment
+    st.info(f"Đang hiển thị: **{selected}**")
+
+    filtered_df = (
+        df_comments_with_sentiment
+        if selected == "Tất cả"
+        else df_comments_with_sentiment[
+            df_comments_with_sentiment["sentiment"] == selected
+        ]
+    )
+
+    comment_checked = check_empty_comments(df_comments_with_sentiment)
+
+    if not comment_checked:
+        st.markdown(
+            f"**Hiển thị {len(filtered_df)} / {len(df_comments_with_sentiment)} bình luận**"
         )
 
+    if not filtered_df.empty:
+        displayed = render_results_table(filtered_df)
+        if displayed:
+            render_sentiment_stats(
+                df_posts_cleaned, df_comments_with_sentiment, comment_checked
+            )
+        else:
+            st.error("❌ Không tìm thấy các cột dữ liệu cần thiết.")
     else:
-        st.error("❌ Không tìm thấy các cột dữ liệu cần thiết.")
+        st.warning(f"❌ Không có bình luận nào có cảm xúc '{selected}'")
 
 
-# ==============================
-# Chạy ứng dụng
-# ==============================
+def main():
+    configure_streamlit()
+    st.title("Facebook Sentiment Analysis")
+    st.markdown(
+        "Nhập các liên kết bài viết Facebook để thực hiện phân tích cảm xúc bình luận."
+    )
+
+    post_links = handle_link_input()
+
+    _, col2, _ = st.columns([1.3, 1, 1])
+    with col2:
+        clicked = st.button("🚀 Phân tích")
+
+    if clicked:
+        run_analysis(post_links)
+
+    if "df_comments_with_sentiment" in st.session_state:
+        display_results(
+            st.session_state.df_posts_cleaned,
+            st.session_state.df_comments_with_sentiment,
+        )
+
+
 if __name__ == "__main__":
     main()
