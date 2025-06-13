@@ -1,9 +1,14 @@
+altair
 emoji
-ipywidgets
-jupyter
+matplotlib
+numpy
 pandas
 playwright
 plotly
 streamlit
 torch
 transformers
+underthesea
+wordcloud
+ipywidgets
+jupyter
