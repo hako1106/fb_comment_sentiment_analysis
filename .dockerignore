@@ -1,7 +1,6 @@
 .git/
 .gitignore
 data/
-models/
 notebooks/
 
 __pycache__/
