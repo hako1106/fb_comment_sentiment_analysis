@@ -5,8 +5,8 @@
 ## Cấu trúc thư mục
 
 .
-├── data/                      # Dữ liệu thu thập và xử lý
-├── models/                    # Lưu mô hình phân tích (nếu có)
+├── data/                      # Dữ liệu thu thập và xử lý (xuất hiện khi bạn chạy ứng dụng)
+├── models/                    # Lưu mô hình phân tích (xuất hiện khi bạn chạy ứng dụng)
 ├── notebooks/                 # Các notebook thử nghiệm
 ├── src/                       # Mã nguồn xử lý
 │   ├── data_processing.py         # Làm sạch và xử lý văn bản
