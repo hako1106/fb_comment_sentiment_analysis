@@ -6,6 +6,8 @@
 
 ```
 .
+├── assets/
+│   └── demo.gif               # File GIF minh họa ứng dụng
 ├── data/                      # Dữ liệu thu thập và xử lý (xuất hiện khi chạy ứng dụng)
 ├── models/                    # Lưu mô hình phân tích (xuất hiện khi chạy ứng dụng)
 ├── notebooks/                 # Các notebook thử nghiệm
