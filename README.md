@@ -4,6 +4,7 @@
 
 ## Cấu trúc thư mục
 
+```
 .
 ├── data/                      # Dữ liệu thu thập và xử lý (xuất hiện khi bạn chạy ứng dụng)
 ├── models/                    # Lưu mô hình phân tích (xuất hiện khi bạn chạy ứng dụng)
@@ -19,32 +20,37 @@
 ├── Dockerfile                # Thiết lập Docker
 ├── .dockerignore             # Bỏ qua file không cần trong Docker
 ├── .gitignore                # Bỏ qua file không cần trong Git
-├── vietnamese_stopwords.txt # Danh sách từ dừng tiếng Việt
+├── vietnamese_stopwords.txt  # Danh sách từ dừng tiếng Việt
 └── README.md                 # Tài liệu hướng dẫn sử dụng
+```
 
 ## Cách sử dụng
 
 ### Cách 1: Chạy trực tiếp bằng Python
 
-Bước 1: Cài đặt thư viện
-
+**Bước 1**: Cài đặt thư viện
+```bash
 pip install -r requirements.txt
+```
 
-Bước 2: Chạy ứng dụng
-
+**Bước 2**: Chạy ứng dụng
+```bash
 streamlit run app.py
+```
 
 Sau đó truy cập địa chỉ: http://localhost:8501
 
 ### Cách 2: Sử dụng Docker
 
-Bước 1: Build image
-
+**Bước 1**: Build image
+```bash
 docker build -t fb-sentiment-app .
+```
 
-Bước 2: Chạy container
-
+**Bước 2**: Chạy container
+```bash
 docker run -p 8501:8501 fb-sentiment-app
+```
 
 ## Tính năng chính
 
