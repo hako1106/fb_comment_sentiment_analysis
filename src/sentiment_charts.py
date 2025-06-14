@@ -145,8 +145,7 @@ def render_wordcloud(df_comments_with_sentiment):
         width=800,
         height=400,
         background_color="white",
-        font_path="arial.ttf",
-        colormap="viridis",
+        colormap="magma",
         max_words=200,
     ).generate(text)
 
