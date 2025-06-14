@@ -1,1 +1,79 @@
-# fb_comment_sentiment_analysis
+# Phân Tích Cảm Xúc Bài Viết Facebook (Tiếng Việt)
+
+Đây là một ứng dụng giúp thu thập bài viết từ Facebook, phân tích cảm xúc tiếng Việt và trực quan hóa kết quả bằng biểu đồ và WordCloud. Ứng dụng được xây dựng bằng Python và Streamlit, có thể chạy trực tiếp trong trình duyệt hoặc trong Docker.
+
+## Cấu trúc thư mục
+
+.
+├── data/                      # Dữ liệu thu thập và xử lý
+├── models/                    # Lưu mô hình phân tích (nếu có)
+├── notebooks/                 # Các notebook thử nghiệm
+├── src/                       # Mã nguồn xử lý
+│   ├── data_processing.py         # Làm sạch và xử lý văn bản
+│   ├── facebook_crawling.py       # Thu thập bài viết từ Facebook
+│   ├── sentiment_analysis.py      # Dự đoán cảm xúc
+│   ├── sentiment_charts.py        # Vẽ biểu đồ trực quan
+│   └── main.py                    # Tùy chọn: chạy xử lý độc lập
+├── app.py                    # Ứng dụng Streamlit chính
+├── requirements.txt          # Thư viện cần thiết
+├── Dockerfile                # Thiết lập Docker
+├── .dockerignore             # Bỏ qua file không cần trong Docker
+├── .gitignore                # Bỏ qua file không cần trong Git
+├── vietnamese_stopwords.txt # Danh sách từ dừng tiếng Việt
+└── README.md                 # Tài liệu hướng dẫn sử dụng
+
+## Cách sử dụng
+
+### Cách 1: Chạy trực tiếp bằng Python
+
+Bước 1: Cài đặt thư viện
+
+pip install -r requirements.txt
+
+Bước 2: Chạy ứng dụng
+
+streamlit run app.py
+
+Sau đó truy cập địa chỉ: http://localhost:8501
+
+### Cách 2: Sử dụng Docker
+
+Bước 1: Build image
+
+docker build -t fb-sentiment-app .
+
+Bước 2: Chạy container
+
+docker run -p 8501:8501 fb-sentiment-app
+
+## Tính năng chính
+
+- Nhập link bài viết Facebook qua textarea hoặc file .txt / .csv
+- Tự động thu thập nội dung bài viết bằng Playwright
+- Xử lý văn bản tiếng Việt: xóa stopwords, biểu tượng, liên kết, từ trùng lặp
+- Phân tích cảm xúc: tích cực, tiêu cực, trung tính
+- Trực quan hóa kết quả:
+  - Biểu đồ phân bố cảm xúc
+  - WordCloud theo từng cảm xúc
+  - Biểu đồ tổng hợp tương tác: like, comment, share
+
+## Yêu cầu hệ thống
+
+- Python 3.11
+- Google Chrome (dành cho Playwright)
+- Docker (nếu sử dụng container)
+
+## Demo
+
+(Tùy chọn: chèn ảnh gif hoặc video minh họa nếu có)
+
+## Đóng góp và phản hồi
+
+Bạn có thể:
+- Tạo issue
+- Gửi pull request
+- Liên hệ qua email: thanhako1106@gmail.com
+
+## Giấy phép
+
+Dự án được phát hành theo giấy phép MIT. Bạn có thể tự do sử dụng, chỉnh sửa và phân phối lại theo nhu cầu cá nhân hoặc tổ chức.
