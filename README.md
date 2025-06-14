@@ -1,6 +1,6 @@
 # Phân Tích Cảm Xúc Bài Viết Facebook (Tiếng Việt)
 
-Đây là một ứng dụng giúp thu thập bài viết từ Facebook, phân tích cảm xúc tiếng Việt và trực quan hóa kết quả bằng biểu đồ và WordCloud. Ứng dụng được xây dựng bằng Python và Streamlit, có thể chạy trực tiếp trong trình duyệt hoặc trong Docker.
+Đây là một ứng dụng giúp thu thập bài viết từ Facebook, phân tích cảm xúc tiếng Việt và trực quan hóa kết quả bằng biểu đồ và WordCloud. Ứng dụng được xây dựng bằng Python và Streamlit, có thể chạy trực tiếp bằng Python hoặc trong Docker.
 
 ## Cấu trúc thư mục
 
