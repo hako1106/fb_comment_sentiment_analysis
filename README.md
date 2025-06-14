@@ -70,7 +70,7 @@ docker run -p 8501:8501 fb-sentiment-app
 
 ## Demo
 
-![Demo](assets/demo.gif)
+![Minh họa ứng dụng phân tích cảm xúc](assets/demo.gif)
 
 ## Đóng góp và phản hồi
 
