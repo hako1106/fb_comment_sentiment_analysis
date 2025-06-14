@@ -63,6 +63,8 @@ docker build -t fb-sentiment-app .
 docker run -p 8501:8501 fb-sentiment-app
 ```
 
+Sau đó truy cập địa chỉ: http://localhost:8501
+
 ## Tính năng chính
 
 - Nhập link bài viết Facebook qua textarea hoặc file .txt / .csv
