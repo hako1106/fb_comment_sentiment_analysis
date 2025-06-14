@@ -59,7 +59,7 @@ docker build -t fb-sentiment-app .
 docker run -p 8501:8501 fb-sentiment-app
 ```
 
-#### Sau khi thực hiện thành công 1 trong 3 cách trên, truy cập địa chỉ: http://localhost:8501
+### Sau khi thực hiện thành công 1 trong 3 cách trên, truy cập địa chỉ: http://localhost:8501
 
 ## Tính năng chính
 
