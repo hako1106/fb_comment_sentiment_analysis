@@ -56,12 +56,11 @@ docker run -p 8501:8501 fb-sentiment-app
 
 - Nhập link bài viết Facebook qua textarea hoặc file .txt / .csv
 - Tự động thu thập nội dung bài viết bằng Playwright
-- Xử lý văn bản tiếng Việt: xóa stopwords, biểu tượng, liên kết, từ trùng lặp
 - Phân tích cảm xúc: tích cực, tiêu cực, trung tính
 - Trực quan hóa kết quả:
+  - Biểu đồ tổng hợp tương tác: like, comment, share theo bài đăng
   - Biểu đồ phân bố cảm xúc
   - WordCloud theo từng cảm xúc
-  - Biểu đồ tổng hợp tương tác: like, comment, share
 
 ## Yêu cầu hệ thống
 
@@ -71,7 +70,7 @@ docker run -p 8501:8501 fb-sentiment-app
 
 ## Demo
 
-(Tùy chọn: chèn ảnh gif hoặc video minh họa nếu có)
+![Demo](assets/demo.gif)
 
 ## Đóng góp và phản hồi
 
