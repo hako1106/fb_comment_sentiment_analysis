@@ -42,7 +42,16 @@ streamlit run app.py
 
 Sau đó truy cập địa chỉ: http://localhost:8501
 
-### Cách 2: Sử dụng Docker
+### Cách 2: Sử dụng Docker Hub (Khuyến nghị)
+
+**Chạy trực tiếp từ Docker Hub**:
+```bash
+docker run -p 8501:8501 hako1106/fb-sentiment-app:1.0.0
+```
+
+Sau đó truy cập địa chỉ: http://localhost:8501
+
+### Cách 3: Sử dụng Docker
 
 **Bước 1**: Build image
 ```bash
@@ -84,3 +93,6 @@ Bạn có thể:
 ## Giấy phép
 
 Dự án được phát hành theo giấy phép MIT. Bạn có thể tự do sử dụng, chỉnh sửa và phân phối lại theo nhu cầu cá nhân hoặc tổ chức.
+
+
+
