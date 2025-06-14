@@ -40,16 +40,12 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Sau đó truy cập địa chỉ: http://localhost:8501
-
 ### Cách 2: Sử dụng Docker Hub (Khuyến nghị)
 
 **Chạy trực tiếp từ Docker Hub**:
 ```bash
 docker run -p 8501:8501 hako1106/fb-sentiment-app:1.0.0
 ```
-
-Sau đó truy cập địa chỉ: http://localhost:8501
 
 ### Cách 3: Sử dụng Docker
 
@@ -63,7 +59,7 @@ docker build -t fb-sentiment-app .
 docker run -p 8501:8501 fb-sentiment-app
 ```
 
-Sau đó truy cập địa chỉ: http://localhost:8501
+#### Sau khi thực hiện thành công 1 trong 3 cách trên, truy cập địa chỉ: http://localhost:8501
 
 ## Tính năng chính
 
