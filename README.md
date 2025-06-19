@@ -44,7 +44,7 @@ streamlit run app.py
 
 **Chạy trực tiếp từ Docker Hub**:
 ```bash
-docker run -p 8501:8501 hako1106/fb-sentiment-app:1.0.0
+docker run -p 8501:8501 thanhnghds/fb-sentiment-app:1.1.0
 ```
 
 ### Cách 3: Sử dụng Docker
@@ -86,4 +86,4 @@ docker run -p 8501:8501 fb-sentiment-app
 Bạn có thể:
 - Tạo issue
 - Gửi pull request
-- Liên hệ qua email: thanhako1106@gmail.com
+- Liên hệ qua email: thanhngh.ds@gmail.com
