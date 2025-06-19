@@ -62,7 +62,7 @@ docker-compose down
 docker run -p 8501:8501 thanhnghds/fb-sentiment-app:latest
 ```
 
-### Sau khi thực hiện thành công 1 trong 4 cách trên, truy cập địa chỉ: http://localhost:8501
+### Sau khi thực hiện thành công 1 trong 3 cách trên, truy cập địa chỉ: http://localhost:8501
 
 ## Tính năng chính
 
