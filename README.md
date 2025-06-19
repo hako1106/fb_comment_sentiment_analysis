@@ -20,6 +20,7 @@
 ├── app.py                    # Ứng dụng Streamlit chính
 ├── requirements.txt          # Thư viện cần thiết
 ├── Dockerfile                # Thiết lập Docker
+├── docker-compose.yml        # Cấu hình Docker Compose
 ├── .dockerignore             # Bỏ qua file không cần trong Docker
 ├── .gitignore                # Bỏ qua file không cần trong Git
 ├── vietnamese_stopwords.txt  # Danh sách từ dừng tiếng Việt
