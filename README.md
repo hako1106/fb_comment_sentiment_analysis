@@ -40,14 +40,29 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### Cách 2: Sử dụng Docker Hub (Khuyến nghị)
+### Cách 2: Sử dụng Docker Compose (Khuyến nghị)
 
-**Chạy trực tiếp từ Docker Hub**:
+**Bước 1**: Pull image từ Docker Hub
 ```bash
-docker run -p 8501:8501 thanhnghds/fb-sentiment-app:1.1.0
+docker pull thanhnghds/fb-sentiment-app:latest
 ```
 
-### Cách 3: Sử dụng Docker
+**Bước 2**: Chạy ứng dụng
+```bash
+docker-compose up -d
+```
+
+**Bước 3**: Dừng ứng dụng (nếu cần)
+```bash
+docker-compose down
+```
+
+### Cách 3: Chạy trực tiếp từ Docker Hub
+```bash
+docker run -p 8501:8501 thanhnghds/fb-sentiment-app:latest
+```
+
+### Cách 4: Cách 4: Build từ source code
 
 **Bước 1**: Build image
 ```bash
