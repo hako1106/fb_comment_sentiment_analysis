@@ -33,6 +33,15 @@ def wait_for_page_load(page: Page, timeout: int = 10) -> None:
         time.sleep(2)
 
 
+def parse_facebook_number(num_str: str) -> int:
+    num_str = num_str.lower().replace(",", "").strip()
+    if "k" in num_str:
+        return int(float(num_str.replace("k", "")) * 1_000)
+    elif "m" in num_str:
+        return int(float(num_str.replace("m", "")) * 1_000_000)
+    return int(re.findall(r"\d+", num_str)[0])
+
+
 def extract_engagement_metrics(page: Page) -> Dict[str, int]:
     """Extract reaction, comment, and share counts from the post."""
 
@@ -43,71 +52,45 @@ def extract_engagement_metrics(page: Page) -> Dict[str, int]:
     }
 
     reaction_selectors = ['span[aria-hidden="true"] span span']
-
     comment_selectors = ['span:has-text("comments")', 'span:has-text("bình luận")']
 
-    share_selectors = [
-        'span:has-text("shares")',
-        'span:has-text("chia sẻ")',
-        'span:has-text("lượt chia sẻ")',
-    ]
-
-    for selector in reaction_selectors:
-        try:
-            page.wait_for_selector(selector, timeout=15000)
-            element = page.locator(selector).first
-            text = element.inner_text(timeout=1000).strip()
-            if not text:
+    def extract_from_selectors(selectors, metric_key):
+        for selector in selectors:
+            try:
+                element = page.locator(selector).first
+                if element.is_visible():
+                    text = element.inner_text(timeout=1000).strip().lower()
+                    match = re.search(r"\d[\d,.]*[kKmM]?", text)
+                    if match:
+                        val = parse_facebook_number(match.group(0))
+                        metrics[metric_key] = max(metrics[metric_key], val)
+                        break
+            except Exception:
                 continue
 
-            if re.fullmatch(r"(\d[\d,]*)", text):
-                numbers = re.findall(r"(\d[\d,]*)", text)
-                if numbers:
-                    val = int(numbers[0].replace(",", ""))
-                    metrics["reactions_count"] = max(metrics["reactions_count"], val)
-                    break
-            elif "K" in text.upper() or "M" in text.upper():
-                numbers = re.findall(r"(\d+(?:[.,]\d+)?)", text)
-                if numbers:
-                    num_str = numbers[0].replace(",", ".")
-                    if "K" in text.upper():
-                        val = float(num_str) * 1000
-                    else:  # 'M'
-                        val = float(num_str) * 1000000
-                    metrics["reactions_count"] = max(
-                        metrics["reactions_count"], int(val)
-                    )
-                    break
-        except Exception:
-            pass
+    try:
+        page.wait_for_selector(reaction_selectors[0], timeout=15000)
+    except Exception:
+        pass
+    extract_from_selectors(reaction_selectors, "reactions_count")
 
-    for selector in comment_selectors:
-        try:
-            element = page.locator(selector).first
-            if element.is_visible():
-                text = element.inner_text(timeout=1000).strip()
-                numbers = re.findall(r"(\d[\d,]*)", text)
-                if numbers:
-                    metrics["comments_count"] = max(
-                        metrics["comments_count"], int(numbers[0].replace(",", ""))
-                    )
-                    break
-        except Exception:
-            pass
+    extract_from_selectors(comment_selectors, "comments_count")
 
-    for selector in share_selectors:
+    possible_share_spans = page.locator(
+        'span.html-span:has-text("share"), span.html-span:has-text("lượt chia sẻ")'
+    )
+    for element in possible_share_spans.all():
         try:
-            element = page.locator(selector).first
             if element.is_visible():
-                text = element.inner_text(timeout=1000).strip()
-                numbers = re.findall(r"(\d[\d,]*)", text)
-                if numbers:
-                    metrics["shares_count"] = max(
-                        metrics["shares_count"], int(numbers[0].replace(",", ""))
-                    )
-                    break
+                text = element.inner_text(timeout=1000).strip().lower()
+                if re.search(r"\d[\d,.]*\s+(shares|chia sẻ|lượt chia sẻ)$", text):
+                    match = re.search(r"\d[\d,.]*[kKmM]?", text)
+                    if match:
+                        val = parse_facebook_number(match.group(0))
+                        metrics["shares_count"] = max(metrics["shares_count"], val)
+                        break
         except Exception:
-            pass
+            continue
 
     return metrics
 

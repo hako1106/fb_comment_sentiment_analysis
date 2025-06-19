@@ -1,12 +1,10 @@
-altair
-emoji
-matplotlib
-numpy
 pandas
 playwright
-plotly
 streamlit
+matplotlib
+plotly
 torch
 transformers
+emoji
 underthesea
 wordcloud
