@@ -1,11 +1,13 @@
 # Phân Tích Cảm Xúc Bài Viết Facebook (Tiếng Việt)
 
-Đây là một ứng dụng giúp thu thập bài viết từ Facebook, phân tích cảm xúc tiếng Việt và trực quan hóa kết quả bằng biểu đồ và WordCloud. Ứng dụng được xây dựng bằng Python và Streamlit, có thể chạy trực tiếp bằng Python hoặc trong Docker.
+Đây là một ứng dụng giúp thu thập bài viết từ Facebook, phân tích cảm xúc tiếng Việt bằng mô hình `hieudinhpro/BERT_Sentiment_Vietnamese` và trực quan hóa kết quả bằng biểu đồ và WordCloud. Ứng dụng được xây dựng bằng Python và Streamlit, có thể chạy trực tiếp bằng Python hoặc trong Docker.
 
 ## Cấu trúc thư mục
 
 ```
 .
+├── assets/
+│   └── demo.gif               # File GIF minh họa ứng dụng
 ├── data/                      # Dữ liệu thu thập và xử lý (xuất hiện khi chạy ứng dụng)
 ├── models/                    # Lưu mô hình phân tích (xuất hiện khi chạy ứng dụng)
 ├── notebooks/                 # Các notebook thử nghiệm
@@ -38,9 +40,14 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Sau đó truy cập địa chỉ: http://localhost:8501
+### Cách 2: Sử dụng Docker Hub (Khuyến nghị)
 
-### Cách 2: Sử dụng Docker
+**Chạy trực tiếp từ Docker Hub**:
+```bash
+docker run -p 8501:8501 hako1106/fb-sentiment-app:1.0.0
+```
+
+### Cách 3: Sử dụng Docker
 
 **Bước 1**: Build image
 ```bash
@@ -51,6 +58,8 @@ docker build -t fb-sentiment-app .
 ```bash
 docker run -p 8501:8501 fb-sentiment-app
 ```
+
+### Sau khi thực hiện thành công 1 trong 3 cách trên, truy cập địa chỉ: http://localhost:8501
 
 ## Tính năng chính
 
@@ -70,7 +79,7 @@ docker run -p 8501:8501 fb-sentiment-app
 
 ## Demo
 
-![Demo](assets/demo.gif)
+![Minh họa ứng dụng phân tích cảm xúc](assets/demo.gif)
 
 ## Đóng góp và phản hồi
 
@@ -78,7 +87,3 @@ Bạn có thể:
 - Tạo issue
 - Gửi pull request
 - Liên hệ qua email: thanhako1106@gmail.com
-
-## Giấy phép
-
-Dự án được phát hành theo giấy phép MIT. Bạn có thể tự do sử dụng, chỉnh sửa và phân phối lại theo nhu cầu cá nhân hoặc tổ chức.
