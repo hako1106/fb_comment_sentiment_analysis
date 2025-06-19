@@ -62,18 +62,6 @@ docker-compose down
 docker run -p 8501:8501 thanhnghds/fb-sentiment-app:latest
 ```
 
-### Cách 4: Cách 4: Build từ source code
-
-**Bước 1**: Build image
-```bash
-docker build -t fb-sentiment-app .
-```
-
-**Bước 2**: Chạy container
-```bash
-docker run -p 8501:8501 fb-sentiment-app
-```
-
 ### Sau khi thực hiện thành công 1 trong 4 cách trên, truy cập địa chỉ: http://localhost:8501
 
 ## Tính năng chính
