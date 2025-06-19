@@ -82,6 +82,7 @@ docker run -p 8501:8501 thanhnghds/fb-sentiment-app:latest
 
 ## Demo
 
+Ứng dụng phân tích cảm xúc bình luận Facebook với dữ liệu mẫu từ chiến dịch quảng cáo laptop của TGDĐ (1/6/2025)
 ![Minh họa ứng dụng phân tích cảm xúc](assets/demo.gif)
 
 ## Đóng góp và phản hồi
