@@ -1,0 +1,7 @@
+services:
+  fb_sentiment_app:
+    image: thanhnghds/fb-sentiment-app:latest
+    ports:
+      - "8501:8501"
+    container_name: fb-sentiment-container
+    restart: unless-stopped

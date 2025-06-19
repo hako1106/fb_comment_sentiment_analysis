@@ -60,6 +60,7 @@ RUN mkdir -p /home/appuser/.cache/ms-playwright && \
 USER appuser
 
 # Environment variables for Streamlit and Playwright
+# Environment variables for Streamlit and Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/usr/local/share/playwright \
     STREAMLIT_SERVER_ENABLECORS=false \
     STREAMLIT_SERVER_HEADLESS=true \
@@ -67,10 +68,7 @@ ENV PLAYWRIGHT_BROWSERS_PATH=/usr/local/share/playwright \
     STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
     STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
     STREAMLIT_GLOBAL_DEVELOPMENT_MODE=false \
-    STREAMLIT_THEME_PRIMARYCOLOR="#FF6B6B" \
-    STREAMLIT_THEME_BACKGROUNDCOLOR="#FFFFFF" \
-    STREAMLIT_THEME_SECONDARYBACKGROUNDCOLOR="#F0F2F6" \
-    STREAMLIT_THEME_TEXTCOLOR="#262730"
+    MPLCONFIGDIR=/tmp
 
 # Expose port
 EXPOSE 8501
